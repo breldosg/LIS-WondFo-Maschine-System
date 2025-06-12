@@ -27,7 +27,7 @@ io.on('connection', (socket) => {
 
 // Configuration
 const TCP_PORT = 8001;
-const HOST_IP = '192.168.1.102';  // Your computer's Ethernet IP
+const HOST_IP = '192.168.1.145';  // Your computer's Ethernet IP
 
 // Start TCP server with machine IP
 tcpListener.start(TCP_PORT, HOST_IP, io);
