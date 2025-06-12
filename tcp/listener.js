@@ -51,6 +51,9 @@ function start(port, machineIp, wss) {
         console.log(`Wondfo machine connected from ${socket.remoteAddress}`);
 
         socket.on('data', (data) => {
+
+            console.log(data);
+            
             const rawData = data.toString().trim();
             console.log('Received raw data:', rawData);
 
