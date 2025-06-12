@@ -1,13 +1,13 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const WebSocket = require('ws');
 const path = require('path');
 const tcpListener = require('./tcp/listener');
 const routes = require('./routes');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const wss = new WebSocket.Server({ server });
 
 // Express configuration
 app.use(express.static(path.join(__dirname, 'public')));
@@ -16,21 +16,24 @@ app.use(express.json());
 // Routes
 app.use('/', routes);
 
-// Socket.IO connection handling
-io.on('connection', (socket) => {
+// WebSocket connection handling
+wss.on('connection', (ws) => {
     console.log('Web client connected');
     
-    socket.on('disconnect', () => {
+    ws.on('close', () => {
         console.log('Web client disconnected');
     });
 });
+
+// Keep track of all connected clients
+wss.getClients = () => [...wss.clients].filter(client => client.readyState === WebSocket.OPEN);
 
 // Configuration
 const TCP_PORT = 8001;
 const HOST_IP = '192.168.1.145';  // Your computer's Ethernet IP
 
 // Start TCP server with machine IP
-tcpListener.start(TCP_PORT, HOST_IP, io);
+tcpListener.start(TCP_PORT, HOST_IP, wss);
 
 // Start Express server
 const EXPRESS_PORT = 4001;

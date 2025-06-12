@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wondfo Lab Data Monitor</title>
     <link rel="stylesheet" href="style.css">
-    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <div class="container">
@@ -48,12 +47,51 @@
     </div>
 
     <script>
-        const socket = io();
+        // Create WebSocket connection
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}`;
+        const socket = new WebSocket(wsUrl);
+        
         const testForm = document.getElementById('testForm');
         const rawDataContainer = document.getElementById('rawData');
         const parsedDataContainer = document.getElementById('parsedData');
         const currentUserSpan = document.getElementById('currentUser');
         const currentSampleSpan = document.getElementById('currentSample');
+
+        // WebSocket event handlers
+        socket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+
+        socket.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+
+        socket.onmessage = function(event) {
+            const messageData = JSON.parse(event.data);
+            
+            // Handle different message types
+            if (messageData.type === 'tcpData') {
+                const data = messageData.data;
+                
+                // Add raw data
+                const rawDiv = document.createElement('div');
+                rawDiv.className = 'data-item';
+                rawDiv.textContent = data.raw;
+                rawDataContainer.appendChild(rawDiv);
+                rawDataContainer.scrollTop = rawDataContainer.scrollHeight;
+
+                // Show parsed data as JSON
+                console.log('Received parsed data:', data.parsed);  // Debug log
+                const jsonStr = JSON.stringify(data.parsed, null, 2);
+                parsedDataContainer.textContent = jsonStr;
+                parsedDataContainer.scrollTop = parsedDataContainer.scrollHeight;
+            }
+        };
 
         testForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -84,21 +122,6 @@
                 console.error('Error:', error);
                 alert('Failed to start test');
             }
-        });
-
-        socket.on('tcpData', (data) => {
-            // Add raw data
-            const rawDiv = document.createElement('div');
-            rawDiv.className = 'data-item';
-            rawDiv.textContent = data.raw;
-            rawDataContainer.appendChild(rawDiv);
-            rawDataContainer.scrollTop = rawDataContainer.scrollHeight;
-
-            // Show parsed data as JSON
-            console.log('Received parsed data:', data.parsed);  // Debug log
-            const jsonStr = JSON.stringify(data.parsed, null, 2);
-            parsedDataContainer.textContent = jsonStr;
-            parsedDataContainer.scrollTop = parsedDataContainer.scrollHeight;
         });
     </script>
 </body>

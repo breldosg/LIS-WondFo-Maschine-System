@@ -1,4 +1,5 @@
 const net = require('net');
+const WebSocket = require('ws');
 
 let currentTest = {
     username: '',
@@ -45,7 +46,7 @@ function parseHL7Message(data) {
     return results;
 }
 
-function start(port, machineIp, io) {
+function start(port, machineIp, wss) {
     const server = net.createServer((socket) => {
         console.log(`Wondfo machine connected from ${socket.remoteAddress}`);
 
@@ -60,13 +61,23 @@ function start(port, machineIp, io) {
             const parsedData = parseHL7Message(data);
             currentTest.parsedData.push(parsedData);
 
-            // Emit data to web clients
-            io.emit('tcpData', {
-                raw: rawData,
-                parsed: parsedData,
-                testInfo: {
-                    username: currentTest.username,
-                    sampleNumber: currentTest.sampleNumber
+            // Create the message to send to clients
+            const message = JSON.stringify({
+                type: 'tcpData',
+                data: {
+                    raw: rawData,
+                    parsed: parsedData,
+                    testInfo: {
+                        username: currentTest.username,
+                        sampleNumber: currentTest.sampleNumber
+                    }
+                }
+            });
+
+            // Broadcast to all connected web clients
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(message);
                 }
             });
         });
