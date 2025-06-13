@@ -2,10 +2,9 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
-
-//lab machine methods for listening results from the machine
-const tcpListener = require('./tcp/listener');
-const routes = require('./routes');
+const {initializeWondfoLabConnection} = require('./websockets/wondfo_lab_connection');
+const {initializeWebClientConnection} = require('./websockets/web_client_connection/webClient');
+const {wondfoTCPPort, wondfoMachineIp, serverIp, serverPort} = require('./config');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,31 +14,17 @@ const wss = new WebSocket.Server({ server });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Routes
-app.use('/', routes);
-
-// WebSocket connection handling
-wss.on('connection', (ws) => {
-    console.log('Web client connected');
-    
-    ws.on('close', () => {
-        console.log('Web client disconnected');
-    });
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Keep track of all connected clients
-wss.getClients = () => [...wss.clients].filter(client => client.readyState === WebSocket.OPEN);
-
-// Configuration
-const TCP_PORT = 8001;
-const HOST_IP = '192.168.1.145';  // Your computer's Ethernet IP
 
 // Start TCP server with machine IP
-tcpListener.start(TCP_PORT, HOST_IP, wss);
+initializeWebClientConnection(wss);
+initializeWondfoLabConnection(wondfoTCPPort, wondfoMachineIp, wss);
 
 // Start Express server
-const EXPRESS_PORT = 4001;
-server.listen(EXPRESS_PORT, () => {
-    console.log(`Express server running on port ${EXPRESS_PORT}`);
-    console.log(`TCP Server listening on ${HOST_IP}:${TCP_PORT}`);
+server.listen(serverPort, () => {
+    console.log(`Express server running on port ${serverPort}`);
+    console.log(`TCP Server listening on ${wondfoMachineIp}:${wondfoTCPPort}`);
 }); 

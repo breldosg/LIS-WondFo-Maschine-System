@@ -1,9 +1,11 @@
+const wondfoTCPPort = 8001;
+const wondfoMachineIp = '192.168.1.145';
+const serverIp = '192.168.1.145';
+const serverPort = 4001;
+
 module.exports = {
-    tcp: {
-        port: 5000,
-        machineIp: '192.168.1.100'  // Change this to match your machine's IP
-    },
-    express: {
-        port: 4001
-    }
-}; 
+    wondfoTCPPort,
+    wondfoMachineIp,
+    serverIp,
+    serverPort
+}

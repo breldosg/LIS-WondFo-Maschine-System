@@ -5,24 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wondfo Lab Data Monitor</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .status-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: red;
+            margin-right: 10px;
+        }
+        .status-text {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Wondfo Lab Data Monitor</h1>
         
-        <div class="test-form">
-            <h2>Start New Test</h2>
-            <form id="testForm">
-                <div class="form-group">
-                    <label for="username">User Name:</label>
-                    <input type="text" id="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="sampleNumber">Sample Number:</label>
-                    <input type="text" id="sampleNumber" required>
-                </div>
-                <button type="submit">Start Test</button>
-            </form>
+        <div class="status-indicator">
+            <div id="statusCircle" class="status-circle"></div>
+            <span id="statusText" class="status-text">Server Disconnected</span>
         </div>
 
         <div class="data-display">
@@ -52,23 +59,30 @@
         const wsUrl = `${protocol}//${window.location.host}`;
         const socket = new WebSocket(wsUrl);
         
-        const testForm = document.getElementById('testForm');
         const rawDataContainer = document.getElementById('rawData');
         const parsedDataContainer = document.getElementById('parsedData');
         const currentUserSpan = document.getElementById('currentUser');
         const currentSampleSpan = document.getElementById('currentSample');
+        const statusCircle = document.getElementById('statusCircle');
+        const statusText = document.getElementById('statusText');
 
         // WebSocket event handlers
         socket.onopen = function() {
             console.log('WebSocket connection established');
+            statusCircle.style.backgroundColor = 'green';
+            statusText.textContent = 'Server Connected';
         };
 
         socket.onclose = function() {
             console.log('WebSocket connection closed');
+            statusCircle.style.backgroundColor = 'red';
+            statusText.textContent = 'Server Disconnected';
         };
 
         socket.onerror = function(error) {
             console.error('WebSocket error:', error);
+            statusCircle.style.backgroundColor = 'red';
+            statusText.textContent = 'Connection Error';
         };
 
         socket.onmessage = function(event) {
@@ -92,37 +106,6 @@
                 parsedDataContainer.scrollTop = parsedDataContainer.scrollHeight;
             }
         };
-
-        testForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const sampleNumber = document.getElementById('sampleNumber').value;
-
-            try {
-                const response = await fetch('/test/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, sampleNumber })
-                });
-
-                const data = await response.json();
-                
-                if (response.ok) {
-                    currentUserSpan.textContent = username;
-                    currentSampleSpan.textContent = sampleNumber;
-                    rawDataContainer.innerHTML = '';
-                    parsedDataContainer.innerHTML = '';
-                } else {
-                    alert(data.error || 'Failed to start test');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to start test');
-            }
-        });
     </script>
 </body>
 </html> 

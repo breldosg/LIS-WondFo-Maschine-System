@@ -1,14 +1,13 @@
 const net = require('net');
 const WebSocket = require('ws');
 
+
 let currentTest = {
-    username: '',
-    sampleNumber: '',
     rawData: [],
     parsedData: []
 };
 
-function parseHL7Message(data) {
+const parseHL7Message = (data) => {
     const message = data.toString().trim();
     console.log('Parsing message:', message);  // Debug log
     
@@ -46,14 +45,11 @@ function parseHL7Message(data) {
     return results;
 }
 
-function start(port, machineIp, wss) {
+const start = (port, machineIp, wss) => {
     const server = net.createServer((socket) => {
         console.log(`Wondfo machine connected from ${socket.remoteAddress}`);
 
         socket.on('data', (data) => {
-
-            console.log(data);
-            
             const rawData = data.toString().trim();
             console.log('Received raw data:', rawData);
 
@@ -101,16 +97,11 @@ function start(port, machineIp, wss) {
     return server;
 }
 
-function setTestInfo(username, sampleNumber) {
-    currentTest = {
-        username,
-        sampleNumber,
-        rawData: [],
-        parsedData: []
-    };
+const initializeWondfoLabConnection = (wondfoTCPPort, wondfoMachineIp, wss) => {
+    start(wondfoTCPPort, wondfoMachineIp, wss);
 }
 
 module.exports = {
     start,
-    setTestInfo
+    initializeWondfoLabConnection
 }; 
